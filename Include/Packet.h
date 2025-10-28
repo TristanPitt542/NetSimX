@@ -6,5 +6,6 @@ struct Packet {
     int id;
     std::string source;
     std::string destination;
-    std::chrono::steady_clock::time_point timestamp;
+    // use system_clock so timestamps are comparable across processes
+    std::chrono::system_clock::time_point timestamp;
 };

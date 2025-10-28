@@ -1,5 +1,4 @@
 #pragma once
-#include <iostream>
 #include <string>
 
 enum class LogLevel { Info, Warning, Error };
