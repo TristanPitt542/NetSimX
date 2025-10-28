@@ -126,7 +126,6 @@ void NetNode::connectToPeer(const std::string& host, unsigned short port)
 
 void NetNode::send(const Packet& pkt)
 {
-    // serialize: id|source|destination|timestamp_ms
     auto sent_ts = std::chrono::duration_cast<std::chrono::milliseconds>(
                        pkt.timestamp.time_since_epoch())
                        .count();
@@ -135,24 +134,21 @@ void NetNode::send(const Packet& pkt)
     oss << pkt.id << '|' << pkt.source << '|' << pkt.destination << '|' << sent_ts << '\n';
     auto msg = oss.str();
 
-    // Post the write operation to the io_context to ensure thread-safety
     asio::post(io_, [this, msg]() {
         std::lock_guard<std::mutex> lock(peers_mutex_);
-        for (auto it = peer_sockets_.begin(); it != peer_sockets_.end(); ) 
-
+        for (auto it = peer_sockets_.begin(); it != peer_sockets_.end(); ) {
             auto& s = *it;
-            if (!s || !s->is_open())
-            {
+            if (!s || !s->is_open()) {
                 it = peer_sockets_.erase(it);
                 continue;
             }
+
             asio::error_code ec;
             asio::write(*s, asio::buffer(msg), ec);
+
             if (ec) {
                 Logger::Log(std::string("send error: ") + ec.message(), LogLevel::Warning);
-                // remove broken socket
                 it = peer_sockets_.erase(it);
-                continue;
             } else {
                 ++it;
             }

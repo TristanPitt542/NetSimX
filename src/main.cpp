@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
         {
             Packet p{i, name, "peer", std::chrono::system_clock::now()};
             node.send(p);
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         }
 
         std::this_thread::sleep_for(std::chrono::seconds(1));
