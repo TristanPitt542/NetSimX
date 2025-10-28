@@ -26,8 +26,16 @@ NetSimX/
 ## Build ##
 
 Using CMD:
-git close https://github.com/TristanPitt542/NetSimX.git
-cd NetSimX
-cmake -B build
-cmake --build build --config Release
-.\build\Release\NetSimX.exe
+ - git close https://github.com/TristanPitt542/NetSimX.git
+ - cd NetSimX
+ - cmake -B build
+ - cmake --build build --config Release
+ - .\build\Release\NetSimX.exe
+
+Using VS Code:
+ - Open Project in VS Code
+ - Make sure CMake Tools & C/C++ is installed
+ - CTRL + SHIFT + P
+ - CMake: configure
+ - Cmake: Build
+ - Run
