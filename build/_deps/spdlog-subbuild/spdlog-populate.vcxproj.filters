@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\Trist\Desktop\NetSimX\build\_deps\spdlog-subbuild\CMakeFiles\539434a1c5423592573431d65972bfd7\spdlog-populate-mkdir.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\Trist\Desktop\NetSimX\build\_deps\spdlog-subbuild\CMakeFiles\539434a1c5423592573431d65972bfd7\spdlog-populate-download.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\Trist\Desktop\NetSimX\build\_deps\spdlog-subbuild\CMakeFiles\539434a1c5423592573431d65972bfd7\spdlog-populate-update.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\Trist\Desktop\NetSimX\build\_deps\spdlog-subbuild\CMakeFiles\539434a1c5423592573431d65972bfd7\spdlog-populate-patch.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\Trist\Desktop\NetSimX\build\_deps\spdlog-subbuild\CMakeFiles\539434a1c5423592573431d65972bfd7\spdlog-populate-configure.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\Trist\Desktop\NetSimX\build\_deps\spdlog-subbuild\CMakeFiles\539434a1c5423592573431d65972bfd7\spdlog-populate-build.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\Trist\Desktop\NetSimX\build\_deps\spdlog-subbuild\CMakeFiles\539434a1c5423592573431d65972bfd7\spdlog-populate-install.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\Trist\Desktop\NetSimX\build\_deps\spdlog-subbuild\CMakeFiles\539434a1c5423592573431d65972bfd7\spdlog-populate-test.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\Trist\Desktop\NetSimX\build\_deps\spdlog-subbuild\CMakeFiles\67be895bd3426c2ad19e0496565606e6\spdlog-populate-complete.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\Trist\Desktop\NetSimX\build\_deps\spdlog-subbuild\CMakeFiles\781d70066b6e58cdd0d7e52b05f97a66\spdlog-populate.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\Trist\Desktop\NetSimX\build\_deps\spdlog-subbuild\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="C:\Users\Trist\Desktop\NetSimX\build\_deps\spdlog-subbuild\CMakeFiles\spdlog-populate" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{A8FD09D3-78BB-32B4-B306-7415DCFE8FD1}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

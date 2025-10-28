@@ -1,0 +1,10 @@
+^C:\USERS\TRIST\DESKTOP\NETSIMX\BUILD\_DEPS\SPDLOG-SUBBUILD\CMAKEFILES\781D70066B6E58CDD0D7E52B05F97A66\GENERATE.STAMP.RULE
+setlocal
+D:\VisualStudio\IDE\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe -SC:/Users/Trist/Desktop/NetSimX/build/_deps/spdlog-subbuild -BC:/Users/Trist/Desktop/NetSimX/build/_deps/spdlog-subbuild --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/Users/Trist/Desktop/NetSimX/build/_deps/spdlog-subbuild/spdlog-populate.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
