@@ -1,0 +1,47 @@
+# ========================
+# Build artifacts
+# ========================
+/build/
+*/build/
+/CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+*.cmake
+
+# ========================
+# Compiled binaries and objects
+# ========================
+*.obj
+*.o
+*.lo
+*.slo
+*.exe
+*.out
+*.app
+*.dll
+*.so
+*.dylib
+*.lib
+*.a
+*.pdb
+*.ilk
+
+# ========================
+# Logs and temp files
+# ========================
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+
+# ========================
+# IDE & Editor files
+# ========================
+
+# Visual Studio Code
+.vscode/
+.vscode-test/
+
+#
