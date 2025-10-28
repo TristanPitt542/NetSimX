@@ -1,3 +1,0 @@
-C:/Users/Trist/Desktop/NetSimX/build/CMakeFiles/NetSimX.dir
-C:/Users/Trist/Desktop/NetSimX/build/CMakeFiles/ALL_BUILD.dir
-C:/Users/Trist/Desktop/NetSimX/build/CMakeFiles/ZERO_CHECK.dir
