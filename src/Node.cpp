@@ -2,6 +2,7 @@
 #include <thread>
 #include <chrono>
 
+//Constructor
 Node::Node(std::string name)
     : name_(std::move(name)), connectedNode_(nullptr), running_(false) {}
 
@@ -10,6 +11,7 @@ void Node::connect(Node* other) {
 }
 
 void Node::send(Packet pkt) {
+    //Error if Node doesn't have connection
     if (!connectedNode_) {
         Logger::Log("[WARNING] " + name_ + " has no connection!", LogLevel::Warning);
         return;
@@ -20,6 +22,7 @@ void Node::send(Packet pkt) {
         connectedNode_->inbox_.push(pkt);
     }
 }
+
 
 void Node::start() {
     running_ = true;
@@ -41,7 +44,9 @@ void Node::processPackets() {
             inbox_.pop();
             lock.unlock();
 
+            //calculate latancy now - timestamp
             auto latency = std::chrono::steady_clock::now() - pkt.timestamp;
+            //Log that packet was recieved
             Logger::Log("[INFO] " + name_ + " received packet " + std::to_string(pkt.id) +
                         " from " + pkt.source +
                         " (latency " + std::to_string(
