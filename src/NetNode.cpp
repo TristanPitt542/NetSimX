@@ -2,6 +2,7 @@
 #include <sstream>
 #include <chrono>
 #include <algorithm>
+#include <stdexcept>
 
 using asio::ip::tcp;
 
@@ -11,7 +12,8 @@ NetNode::NetNode(const std::string& name, unsigned short listen_port)
       io_(),
       acceptor_(io_, tcp::endpoint(tcp::v4(), listen_port_))
 {
-    // keep the io_context alive until we explicitly reset the guard
+    // Keep the io_context active even when no asynchronous tasks are queued,
+    // preventing the background IO thread from prematurely exiting.
     work_guard_ = std::make_unique<asio::executor_work_guard<asio::io_context::executor_type>>(
         asio::make_work_guard(io_)
     );
@@ -25,15 +27,16 @@ NetNode::~NetNode()
 void NetNode::start()
 {
     startAccept();
+    // Spin up dedicated background thread to drive the Asio event loop
     io_thread_ = std::thread([this]() { runIO(); });
     Logger::Log(name_ + " listening on port " + std::to_string(listen_port_), LogLevel::Info);
 }
 
 void NetNode::stop() {
-    // Drop the work guard so io_context can exit once all handlers complete
+    // Drop the work guard so io_context can exit once active handlers complete
     work_guard_.reset();
 
-    // Close acceptor to cancel pending accepts
+    // Safely cancel and close the acceptor to terminate pending async accepts
     asio::post(io_, [this]()
     {
         asio::error_code ec;
@@ -41,11 +44,11 @@ void NetNode::stop() {
         acceptor_.close(ec);
     });
 
-    // stop io and join thread
+    // Stop the event loop and join the background worker thread
     io_.stop();
     if (io_thread_.joinable()) io_thread_.join();
 
-    // close all peer sockets
+    // Lock and tear down all active peer TCP sockets
     std::lock_guard<std::mutex> lock(peers_mutex_);
     for (auto& s : peer_sockets_)
     {
@@ -73,7 +76,7 @@ void NetNode::runIO()
 
 void NetNode::startAccept()
 {
-    // async accept - use lambda capturing this
+    // Asynchronous accept loop waiting for incoming peer connections
     acceptor_.async_accept([this](asio::error_code ec, tcp::socket socket)
     {
         if (!ec)
@@ -81,16 +84,19 @@ void NetNode::startAccept()
             onAccept(std::move(socket));
         } else
         {
-            // If shutting down, accept may error; log at warning
+            // Acceptors often return cancellation errors during shutdown; log as warning
             Logger::Log(std::string("accept error: ") + ec.message(), LogLevel::Warning);
         }
-        // if acceptor still open, keep accepting
+        
+        // Keep listening if the acceptor socket remains open
         if (acceptor_.is_open()) startAccept();
     });
 }
 
 void NetNode::onAccept(tcp::socket socket) {
     Logger::Log(name_ + " accepted incoming connection", LogLevel::Info);
+    
+    // Move raw socket into a shared pointer for safe lifetime extension across async handlers
     auto sock = std::make_shared<tcp::socket>(std::move(socket));
     {
         std::lock_guard<std::mutex> lock(peers_mutex_);
@@ -101,7 +107,7 @@ void NetNode::onAccept(tcp::socket socket) {
 
 void NetNode::connectToPeer(const std::string& host, unsigned short port)
 {
-    // do connection on the io context so all sockets are owned by IO thread
+    // Post connection logic to the IO context to ensure all socket ownership resides on the IO thread
     asio::post(io_, [this, host, port]()
     {
         try
@@ -109,11 +115,14 @@ void NetNode::connectToPeer(const std::string& host, unsigned short port)
             tcp::resolver resolver(io_);
             auto endpoints = resolver.resolve(host, std::to_string(port));
             auto sock = std::make_shared<tcp::socket>(io_);
+            
             asio::connect(*sock, endpoints);
+            
             {
                 std::lock_guard<std::mutex> lock(peers_mutex_);
                 peer_sockets_.push_back(sock);
             }
+            
             Logger::Log(name_ + " connected to peer " + host + ":" + std::to_string(port), LogLevel::Info);
             startRead(sock);
         }
@@ -126,14 +135,17 @@ void NetNode::connectToPeer(const std::string& host, unsigned short port)
 
 void NetNode::send(const Packet& pkt)
 {
+    // Extract epoch timestamp in milliseconds for round-trip latency evaluation
     auto sent_ts = std::chrono::duration_cast<std::chrono::milliseconds>(
                        pkt.timestamp.time_since_epoch())
                        .count();
 
+    // Format packet frame: ID | Source | Destination | Timestamp \n
     std::ostringstream oss;
     oss << pkt.id << '|' << pkt.source << '|' << pkt.destination << '|' << sent_ts << '\n';
     auto msg = oss.str();
 
+    // Post write operation to the IO thread queue for thread-safe socket access
     asio::post(io_, [this, msg]() {
         std::lock_guard<std::mutex> lock(peers_mutex_);
         for (auto it = peer_sockets_.begin(); it != peer_sockets_.end(); ) {
@@ -158,14 +170,14 @@ void NetNode::send(const Packet& pkt)
 
 void NetNode::startRead(std::shared_ptr<tcp::socket> sock)
 {
-    // read until newline into a streambuf
+    // Read asynchronously until newline delimiter ('\n') to handle TCP stream framing
     auto buf = std::make_shared<asio::streambuf>();
-    asio::async_read_until(*sock, *buf, '\n',
+    asiod::async_read_until(*sock, *buf, '\n',
         [this, sock, buf](asio::error_code ec, std::size_t bytes_transferred)
         {
             if (ec)
             {
-                // socket closed or error
+                // Handle graceful disconnects vs unexpected transport errors
                 if (ec == asio::error::eof || ec == asio::error::connection_reset)
                 {
                     Logger::Log(name_ + " peer disconnected", LogLevel::Info);
@@ -173,7 +185,8 @@ void NetNode::startRead(std::shared_ptr<tcp::socket> sock)
                 {
                     Logger::Log(std::string("read error: ") + ec.message(), LogLevel::Warning);
                 }
-                // remove socket
+                
+                // Remove closed or faulted socket from the active peer container safely under lock
                 std::lock_guard<std::mutex> lock(peers_mutex_);
                 peer_sockets_.erase(std::remove_if(peer_sockets_.begin(), peer_sockets_.end(),
                     [sock](const std::shared_ptr<tcp::socket>& s)
@@ -186,21 +199,31 @@ void NetNode::startRead(std::shared_ptr<tcp::socket> sock)
             std::istream is(buf.get());
             std::string line;
             std::getline(is, line);
+            
             if (!line.empty())
             {
-                // parse: id|source|destination|sent_ts
+                // Parse delimited frame: id|source|destination|sent_ts
                 std::istringstream iss(line);
                 std::string token;
                 int id = -1;
                 std::string source, destination;
                 long long sent_ts = 0;
 
-                if (std::getline(iss, token, '|')) id = std::stoi(token);
-                if (std::getline(iss, source, '|')) {}
-                if (std::getline(iss, destination, '|')) {}
-                if (std::getline(iss, token, '|')) sent_ts = std::stoll(token);
+                try
+                {
+                    if (std::getline(iss, token, '|')) id = std::stoi(token);
+                    if (std::getline(iss, source, '|')) {}
+                    if (std::getline(iss, destination, '|')) {}
+                    if (std::getline(iss, token, '|')) sent_ts = std::stoll(token);
+                }
+                catch (const std::exception& parseEx)
+                {
+                    Logger::Log(std::string("Packet frame parse error: ") + parseEx.what(), LogLevel::Warning);
+                    startRead(sock);
+                    return;
+                }
 
-                // compute latency (ms) using system_clock
+                // Compute transit latency in milliseconds
                 auto now_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
                                   std::chrono::system_clock::now().time_since_epoch())
                                   .count();
@@ -212,7 +235,7 @@ void NetNode::startRead(std::shared_ptr<tcp::socket> sock)
                 Logger::Log(log.str(), LogLevel::Info);
             }
 
-            // continue reading from this socket
+            // Continue asynchronous read stream recursion
             startRead(sock);
         });
 }
