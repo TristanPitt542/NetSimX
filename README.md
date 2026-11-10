@@ -1,29 +1,35 @@
-## NetSimX ##
-NetSimX is a lightweight, C++ network simulation project designed to demonstrate packet transfer between nodes, threading, and basic logging. It is modular, easy to extend, and ideal as a showcase for C++ network programming concepts.
+# NetSimX — Multi-Threaded Asynchronous Network Simulator (C++)
 
-## Features ##
+NetSimX is a modular, high-performance C++ networking simulation library and test harness built with Asio. Designed to demonstrate fundamental low-level systems engineering and networking concepts, it features custom TCP stream-framing, multi-threaded event-driven I/O context loops, real-time packet latency telemetry, and thread-safe console logging.
 
- - Simulates network nodes exchanging packets
- - Thread-safe message handling between nodes
- - Timestamped packet latency measurement
- - Simple logging system using std::cout
- - Fully modular and extensible C++ codebase
+---
 
-## Structure ##
+## 🚀 Key Architectural Features
+
+* **Asynchronous Networking Core:** Driven by `asio::io_context` event loops executing on dedicated background worker threads, stabilized by `executor_work_guard` to manage context lifetimes.
+* **Stream-Delimited TCP Framing:** Custom line-delimited payload serialization (`|` and `\n`) handled via asynchronous read stream buffers (`asio::async_read_until`) to eliminate packet fragmentation and truncation issues.
+* **Thread-Safe Static Logging:** Centralized mutex-serialized output system (`Logger`) preventing console log interleaving across concurrent asynchronous handler executions.
+* **Latency Telemetry & Metrics:** Real-time round-trip latency evaluation calculated using microsecond epoch timestamps embedded within transmitted packet headers.
+* **Dual Execution Modes:**
+  * **Default (Zero Arguments):** Automated 2-node loopback integration demo for rapid local verification.
+  * **Parameterized CLI:** Multi-process mode allowing nodes to run as standalone network endpoints with configurable host and port bindings.
+
+---
+
+## 🛠️ Project Structure
 
 NetSimX/
- - CMakeLists.txt
- - include/
- - - Logger.h
- - - Node.h
- - - Packet.h
- - src/
- - - main.cpp
- - - Logger.cpp
- - - Node.cpp
- - - Packet.cpp
+├── CMakeLists.txt
+├── include/
+│   ├── Logger.h      # Thread-safe logging subsystem interface
+│   ├── NetNode.h     # Asio socket manager, acceptor & async IO loop
+│   └── Packet.h      # Header frame structures & timestamp serialization
+└── src/
+    ├── main.cpp       # Application entry point & integration test harness
+    ├── Logger.cpp     # Synchronized output implementation
+    └── NetNode.cpp    # Socket lifetime & frame stream logic
 
-## Build ##
+## 🔨 Build & Run Instructions
 
 Using CMD:
  1. git close https://github.com/TristanPitt542/NetSimX.git
