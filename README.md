@@ -21,7 +21,9 @@ Using CMD:
 4. cmake --build build --config Release
 5. .\build\Release\NetSimX.exe
 
-Using VS Code:
+---
+
+Using Visual Studio / VS Code:
 1. Open Project in VS Code
 2. Make sure CMake Tools & C/C++ is installed
 3. CTRL + SHIFT + P
